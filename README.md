@@ -1,115 +1,115 @@
-# 🤖 AI & Diagnosi Avanzata dei Log IBM® MQ
+# 🤖 AI & Advanced IBM® MQ Log Diagnostics
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![SLM: Qwen2.5-Coder](https://img.shields.io/badge/Ollama-qwen2.5--coder%3A0.5b-orange.svg)](https://ollama.com/library/qwen2.5-coder:0.5b)
 [![Platform: Linux](https://img.shields.io/badge/platform-Linux-lightgrey.svg)](https://www.kernel.org/)
 
-> **Manuale Operativo e Guida Tecnica per l'Infrastruttura Middleware**  
-> **Autore:** Maurizio Delle Fratte | **Versione:** 2.0 | **Data:** Novembre 2026
+> **Operational Manual and Technical Guide for Middleware Infrastructure**  
+> **Author:** Maurizio Delle Fratte | **Version:** 2.0 | **Date:** November 2026
 
 ---
 
-## 📋 Indice dei Contenuti
+## 📋 Table of Contents
 
-- [Descrizione del Progetto](#-descrizione-del-progetto)
-- [Riferimenti Tecnologici Ufficiali](#-riferimenti-tecnologici-ufficiali)
-- [1. Installazione e Ottimizzazione di Ollama](#-1-installazione-e-ottimizzazione-di-ollama)
-- [2. Requisiti di Sistema e Ambiente Python](#-2-requisiti-di-sistema-e-ambiente-python)
-- [3. Architettura dello Script di Analisi](#-3-architettura-dello-script-di-analisi)
-- [4. Guida Operativa ed Esempio di Output](#-4-guida-operativa-ed-esempio-di-output)
-- [5. Intellectual Property, Trademarks & Licenza](#-5-intellectual-property-trademarks--licenza)
-
----
-
-## 📖 Descrizione del Progetto
-
-Questo repository fornisce una soluzione Python ad altissima efficienza per la diagnosi automatica e proattiva dei log di errore **IBM® MQ** (`AMQERRxx.LOG`), eseguita interamente in locale (*on-premise / air-gapped ready*) mediante lettura streaming dei file.
-
-Per minimizzare l'impronta di memoria e massimizzare la velocità di inferenza su sistemi middleware, l'architettura sfrutta il modello Small Language Model (SLM) specializzato **`qwen2.5-coder:0.5b`** orchestrato tramite **Ollama**, ottimizzato a livello di parametri API (`num_predict`, `num_ctx`, `temperature`) e variabili d'ambiente (`OLLAMA_NUM_PARALLEL`, `OLLAMA_KEEP_ALIVE`).
+- [Project Overview](#-project-overview)
+- [Official Technology References](#-official-technology-references)
+- [1. Installing and Optimizing Ollama](#-1-installing-and-optimizing-ollama)
+- [2. System Requirements and Python Environment](#-2-system-requirements-and-python-environment)
+- [3. Analysis Script Architecture](#-3-analysis-script-architecture)
+- [4. Operational Guide and Output Example](#-4-operational-guide-and-output-example)
+- [5. Intellectual Property, Trademarks & License](#-5-intellectual-property-trademarks--license)
 
 ---
 
-## 🔗 Riferimenti Tecnologici Ufficiali
+## 📖 Project Overview
 
-Le metodologie, il parsing dei codici di errore e i comandi MQSC generati si basano esclusivamente sulla documentazione ufficiale dei rispettivi vendor:
+This repository provides a high-efficiency Python solution for automatic and proactive diagnosis of **IBM® MQ** error logs (`AMQERRxx.LOG`), executed entirely locally (*on-premise / air-gapped ready*) via file streaming.
+
+To minimize memory footprint and maximize inference speed on middleware systems, the architecture leverages the specialized Small Language Model (SLM) **`qwen2.5-coder:0.5b`** orchestrated through **Ollama**, tuned via API parameters (`num_predict`, `num_ctx`, `temperature`) and environment variables (`OLLAMA_NUM_PARALLEL`, `OLLAMA_KEEP_ALIVE`).
+
+---
+
+## 🔗 Official Technology References
+
+Methodologies, error code parsing, and generated MQSC commands rely exclusively on the official documentation of their respective vendors:
 
 1. **IBM® MQ Documentation (IBM Documentation Portal):**
-   - [Messaggi e codici di errore IBM MQ (AMQ9000 - AMQ9999)](https://www.ibm.com/docs/en/ibm-mq/9.3?topic=messages-amq9000-amq9999-remote-messages)
+   - [IBM MQ Messages and Error Codes (AMQ9000 - AMQ9999)](https://www.ibm.com/docs/en/ibm-mq/9.3?topic=messages-amq9000-amq9999-remote-messages)
 2. **Ollama & Technical Small Language Models (SLM):**
-   - [Download Server ed Executable Ollama](https://ollama.com/download)
-   - [Modello specializzato IT/Code `qwen2.5-coder:0.5b`](https://ollama.com/library/qwen2.5-coder:0.5b)
-   - [Client ufficiale Python per Ollama (`ollama-python`)](https://github.com/ollama/ollama-python)
+   - [Download Ollama Server and Executable](https://ollama.com/download)
+   - [Specialized IT/Code Model `qwen2.5-coder:0.5b`](https://ollama.com/library/qwen2.5-coder:0.5b)
+   - [Official Python Client for Ollama (`ollama-python`)](https://github.com/ollama/ollama-python)
 
 ---
 
-## ⚙️ 1. Installazione e Ottimizzazione di Ollama
+## ⚙️ 1. Installing and Optimizing Ollama
 
-Il modello `qwen2.5-coder:0.5b` mantiene un footprint di memoria estremamente ridotto (~390 MB), garantendo al contempo un'elevata precisione sintattica sui comandi MQSC rispetto ai modelli generalisti di pari dimensione.
+The `qwen2.5-coder:0.5b` model maintains a very small memory footprint (~390 MB), while providing higher syntactic accuracy on MQSC commands compared to general-purpose models of similar size.
 
-### A. Parametri di Ottimizzazione
+### A. Optimization Parameters
 
-| Parametro / Variabile | Valore Impostato | Funzione Tecnica |
+| Parameter / Variable | Configured Value | Technical Function |
 | :--- | :--- | :--- |
-| `OLLAMA_KEEP_ALIVE` | `24h` | Mantiene i pesi del modello in RAM/VRAM azzerando i tempi di cold-start. |
-| `OLLAMA_NUM_PARALLEL` | `1` | Ottimizza l'allocazione dei thread CPU per elaborazioni sequenziali deterministe. |
-| `num_predict` | `256` | Limita i token in uscita focalizzando l'SLM su causa radice e comandi MQSC. |
-| `num_ctx` | `1024` | Riduce la finestra di contesto al minimo necessario per abbattere la latenza. |
-| `temperature` | `0.1` | Minimizza la varianza probabilistica evitando allucinazioni sintattiche. |
+| `OLLAMA_KEEP_ALIVE` | `24h` | Keeps model weights in RAM/VRAM, eliminating cold-start latency. |
+| `OLLAMA_NUM_PARALLEL` | `1` | Optimizes CPU thread allocation for deterministic sequential processing. |
+| `num_predict` | `256` | Caps output tokens, keeping the SLM focused on root cause and MQSC commands. |
+| `num_ctx` | `1024` | Reduces the context window to the minimum required to lower latency. |
+| `temperature` | `0.1` | Minimizes probabilistic variance to prevent syntactic hallucinations. |
 
-### B. Setup Daemon su Linux
+### B. Linux Daemon Setup
 
 ```bash
-# 1. Download e installazione automatica del daemon Ollama
+# 1. Download and automatically install the Ollama daemon
 curl -fsSL https://ollama.com/install.sh | sh
 
-# 2. Configurazione delle variabili d'ambiente per le prestazioni
+# 2. Configure environment variables for performance
 export OLLAMA_KEEP_ALIVE=24h
 export OLLAMA_NUM_PARALLEL=1
 
-# 3. Download del modello specializzato qwen2.5-coder:0.5b
+# 3. Pull the specialized qwen2.5-coder:0.5b model
 ollama pull qwen2.5-coder:0.5b
 
-# 4. Verifica funzionale rapida con codice errore IBM MQ
-ollama run qwen2.5-coder:0.5b "Analizza errore AMQ9209E"
+# 4. Run a quick functional check with an IBM MQ error code
+ollama run qwen2.5-coder:0.5b "Analyze error AMQ9209E"
 ```
 
 ---
 
-## 💻 2. Requisiti di Sistema e Ambiente Python
+## 💻 2. System Requirements and Python Environment
 
-### Specifiche Hardware (Resource Footprint)
+### Hardware Specifications (Resource Footprint)
 
-| Risorsa Hardware | Specifica Minima (Low-Resource) | Profilo di Produzione Standard | Vantaggio di Efficienza |
+| Hardware Resource | Minimum Spec (Low-Resource) | Standard Production Profile | Efficiency Advantage |
 | :--- | :--- | :--- | :--- |
-| **CPU / Processor** | 1 vCPU (x86_64 / ARM64) | 2 vCPU (uso massimo < 5%) | Inferenza rapida con SLM da 0.5B parametri |
-| **RAM / Memoria** | 512 MB - 1 GB RAM totali | 2 GB RAM totali | Script Python < 100 MB; Modello SLM ~390 MB |
-| **Disk / Storage** | 2 GB Storage totale | 5 GB Storage SSD | Caricamento istantaneo da disco |
+| **CPU / Processor** | 1 vCPU (x86_64 / ARM64) | 2 vCPU (max usage < 5%) | Fast inference with a 0.5B-parameter SLM |
+| **RAM / Memory** | 512 MB - 1 GB total RAM | 2 GB total RAM | Python script < 100 MB; SLM model ~390 MB |
+| **Disk / Storage** | 2 GB total storage | 5 GB SSD storage | Instant loading from disk |
 
-### Installazione Librerie e Virtual Environment
+### Library Installation and Virtual Environment
 
 ```bash
-# Aggiornamento pacchetti di sistema e creazione virtual environment
+# Update system packages and create a virtual environment
 sudo apt update && sudo apt install -y python3 python3-pip python3-venv build-essential
 python3 -m venv mq_ai_env
 source mq_ai_env/bin/activate
 
-# Aggiornamento tool di packaging e installazione dipendenze
+# Upgrade packaging tools and install dependencies
 pip install --upgrade pip setuptools wheel
 pip install --upgrade --index-url https://pypi.org/simple/ send2trash
 pip install requests urllib3 ollama
 
-# Verifica dell'ambiente
+# Verify the environment
 python3 -c "import requests, urllib3, ollama, send2trash; print('Linux Setup: OK')"
 ```
 
 ---
 
-## 🧠 3. Architettura dello Script di Analisi
+## 🧠 3. Analysis Script Architecture
 
-La pipeline elabora il file locale `AMQERR01.LOG` attraverso 5 fasi: **Streaming Ingestion**, **Normalizzazione Regex**, **Deduplicazione tramite Hash MD5**, **Inferenza Locale SLM** e **Formattazione Output**.
+The pipeline processes the local `AMQERR01.LOG` file through 5 stages: **Streaming Ingestion**, **Regex Normalization**, **MD5 Hash Deduplication**, **Local SLM Inference**, and **Output Formatting**.
 
-Salvare il codice seguente come `analizzatore_log_locale.py`:
+Save the following code as `local_log_analyzer.py`:
 
 ```python
 import re
@@ -120,25 +120,25 @@ import ollama
 LOCAL_LOG_FILENAME = "AMQERR01.LOG"
 MODEL_SLM = "qwen2.5-coder:0.5b"
 
-def normalizza_log(line: str) -> str:
-    """Rimuove timestamp, PID e indirizzi IP per estrarre il pattern strutturale dell'errore."""
+def normalize_log(line: str) -> str:
+    """Removes timestamps, PIDs, and IP addresses to extract the structural error pattern."""
     pattern = re.sub(r'\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}', '', line)
     pattern = re.sub(r'Process\(\d+\.\d+\)', '', pattern)
     pattern = re.sub(r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b', '<IP>', pattern)
     return pattern.strip()
 
-def calcola_hash(testo: str) -> str:
-    """Genera un hash MD5 univoco per la deduplicazione delle anomalie ricorrenti."""
-    return hashlib.md5(testo.encode('utf-8')).hexdigest()
+def compute_hash(text: str) -> str:
+    """Generates a unique MD5 hash to deduplicate recurring anomalies."""
+    return hashlib.md5(text.encode('utf-8')).hexdigest()
 
-def preleva_e_analizza_log_stream() -> list:
-    """Legge il file di log in modalità streaming filtrando errori (E:) e warning (W:) univoci."""
+def fetch_and_analyze_log_stream() -> list:
+    """Streams the log file while filtering unique errors (E:) and warnings (W:)."""
     if not os.path.exists(LOCAL_LOG_FILENAME):
-        print(f"❌ Errore: Il file '{LOCAL_LOG_FILENAME}' non è presente nella directory corrente ({os.getcwd()})")
+        print(f"❌ Error: File '{LOCAL_LOG_FILENAME}' was not found in the current directory ({os.getcwd()})")
         return []
     
     seen_patterns = set()
-    anomalie_filtrate = []
+    filtered_anomalies = []
     
     try:
         with open(LOCAL_LOG_FILENAME, 'r', encoding='utf-8', errors='ignore') as f:
@@ -147,26 +147,26 @@ def preleva_e_analizza_log_stream() -> list:
                 if not line_str:
                     continue
                 if "AMQ" in line_str and ("E:" in line_str or "W:" in line_str):
-                    pattern = normalizza_log(line_str)
-                    pattern_hash = calcola_hash(pattern)
+                    pattern = normalize_log(line_str)
+                    pattern_hash = compute_hash(pattern)
                     if pattern_hash not in seen_patterns:
                         seen_patterns.add(pattern_hash)
-                        anomalie_filtrate.append((line_str, pattern))
-        return anomalie_filtrate
+                        filtered_anomalies.append((line_str, pattern))
+        return filtered_anomalies
     except Exception as e:
-        print(f"Errore nella lettura del file locale: {e}")
+        print(f"Error reading local file: {e}")
         return []
 
-def diagnosi_esaustiva_slm(log_line: str) -> str:
-    """Interroga l'SLM locale per ottenere diagnosi, impatto e comandi MQSC correttivi."""
+def comprehensive_slm_diagnosis(log_line: str) -> str:
+    """Queries the local SLM for diagnosis, impact, and corrective MQSC commands."""
     prompt = f"""
-    Sei un esperto Middleware IBM MQ. Analizza questo errore di log:
+    You are an IBM MQ Middleware expert. Analyze this log error:
     LOG: {log_line}
     
-    Fornisci in italiano sintetico:
-    1. DIAGNOSI: Causa radice.
-    2. IMPATTO: Livello di criticità.
-    3. AZIONE CORRETTIVA: Step e comandi MQSC ufficiali.
+    Provide a concise response in English:
+    1. DIAGNOSIS: Root cause.
+    2. IMPACT: Criticality level.
+    3. CORRECTIVE ACTION: Steps and official MQSC commands.
     """
     try:
         res = ollama.chat(
@@ -180,51 +180,51 @@ def diagnosi_esaustiva_slm(log_line: str) -> str:
         )
         return res['message']['content']
     except Exception as e:
-        return f"Errore chiamata Ollama AI: {e}"
+        return f"Ollama AI call error: {e}"
 
 if __name__ == "__main__":
-    anomalie = preleva_e_analizza_log_stream()
-    if not anomalie:
-        print("Nessuna anomalia rilevata nel file locale.")
-    for i, (log_originale, pattern) in enumerate(anomalie, 1):
-        print(f"--- ANOMALIA #{i} ---")
-        print(f"LOG: {log_originale}")
-        print(diagnosi_esaustiva_slm(log_originale))
+    anomalies = fetch_and_analyze_log_stream()
+    if not anomalies:
+        print("No anomalies detected in the local file.")
+    for i, (original_log, pattern) in enumerate(anomalies, 1):
+        print(f"--- ANOMALY #{i} ---")
+        print(f"LOG: {original_log}")
+        print(comprehensive_slm_diagnosis(original_log))
         print("=" * 60)
 ```
 
 ---
 
-## 🚀 4. Guida Operativa ed Esempio di Output
+## 🚀 4. Operational Guide and Output Example
 
-Assicurarsi che il file `AMQERR01.LOG` si trovi nella stessa directory dello script prima dell'avvio:
+Make sure `AMQERR01.LOG` is placed in the same directory as the script before running it:
 
 ```bash
-# 1. Posizionarsi nella directory di lavoro
+# 1. Change to the working directory
 cd /opt/mq_ai_analytics
 
-# 2. Attivare l'ambiente virtuale Python
+# 2. Activate the Python virtual environment
 source mq_ai_env/bin/activate
 
-# 3. Avviare l'analisi locale
-python3 analizzatore_log_locale.py
+# 3. Run the local analysis
+python3 local_log_analyzer.py
 ```
 
-### Esempio di Output Verificato (`AMQ9209E`)
+### Verified Output Example (`AMQ9209E`)
 
 ```text
 =================================================================
-  AVVIO SUITE DI TEST DIAGNOSTICO DETTAGLIATO LOG IBM MQ (AI)
+  STARTING DETAILED IBM MQ LOG DIAGNOSTIC TEST SUITE (AI)
 =================================================================
-▶ ESECUZIONE TEST-01 - Scenario: Interruzione di Rete Canale SDR/RCVR
+▶ RUNNING TEST-01 - Scenario: SDR/RCVR Channel Network Interruption
   RAW LOG: 07/11/2026 14:22:10 - AMQ9209E: Connection to host '10.240.12.88 (1414)' closed unexpectedly.
 -----------------------------------------------------------------
-1. DIAGNOSI TECNICA (Causa Radice):
-   Il canale TCP/IP ha subito un'interruzione anomala della connessione socket verso l'host remoto 10.240.12.88 sulla porta 1414 (RESET o FIN inatteso).
-2. LIVELLO DI SEVERITÀ & IMPATTO BUSINESS:
-   • Severità: ALTA.
-   • Impatto: Messaggi bloccati in coda di trasmissione (XMITQ).
-3. PIANO DI AZIONE CORRETTIVA (Step-by-step IBM MQ Ufficiale):
+1. TECHNICAL DIAGNOSIS (Root Cause):
+   The TCP/IP channel experienced an abnormal socket connection drop toward remote host 10.240.12.88 on port 1414 (unexpected RESET or FIN).
+2. SEVERITY LEVEL & BUSINESS IMPACT:
+   • Severity: HIGH.
+   • Impact: Messages queued on the transmission queue (XMITQ) are blocked.
+3. CORRECTIVE ACTION PLAN (Official IBM MQ Step-by-Step):
    Step 1: DISPLAY CHSTATUS('QM_TEST.TO.QM_REMOTE') ALL
    Step 2: ALTER CHANNEL('QM_TEST.TO.QM_REMOTE') CHLTYPE(SDR) KAINT(300)
    Step 3: START CHANNEL('QM_TEST.TO.QM_REMOTE')
@@ -233,17 +233,17 @@ python3 analizzatore_log_locale.py
 
 ---
 
-## ⚖️ 5. Intellectual Property, Trademarks & Licenza
+## ⚖️ 5. Intellectual Property, Trademarks & License
 
-### Proprietà Intellettuale e Marchi Registrati (Trademark Notice)
-- **IBM®** e **IBM® MQ** sono marchi registrati di **International Business Machines Corporation** negli Stati Uniti e/o in altri Paesi. Questo progetto è uno strumento indipendente di supporto diagnostico e **non** è affiliato, sponsorizzato o approvato da IBM Corporation.
-- **Qwen** e **Qwen2.5-Coder** sono modelli sviluppati da **Alibaba Cloud** (rilasciati sotto licenza Apache 2.0).
-- **Ollama** è un progetto open-source rilasciato sotto licenza MIT.
-- Le librerie Python menzionate (`ollama`, `requests`, `urllib3`, `send2trash`) sono proprietà dei rispettivi autori e soggette alle relative licenze Open Source (MIT / Apache 2.0 / BSD).
+### Intellectual Property and Trademarks (Trademark Notice)
+- **IBM®** and **IBM® MQ** are registered trademarks of **International Business Machines Corporation** in the United States and/or other countries. This project is an independent diagnostic support tool and is **not** affiliated with, sponsored by, or endorsed by IBM Corporation.
+- **Qwen** and **Qwen2.5-Coder** are models developed by **Alibaba Cloud** (released under the Apache 2.0 license).
+- **Ollama** is an open-source project released under the MIT license.
+- The Python libraries mentioned (`ollama`, `requests`, `urllib3`, `send2trash`) are the property of their respective authors and subject to their respective Open Source licenses (MIT / Apache 2.0 / BSD).
 
-### Esclusione di Responsabilità (Disclaimer)
-Il software e i comandi MQSC generati automaticamente dall'intelligenza artificiale vengono forniti *"così come sono"* (*"AS IS"*), senza garanzie di alcun tipo. Prima di eseguire comandi di modifica o riavvio su ambienti **IBM MQ di Produzione**, verificare sempre l'impatto operativo con un amministratore middleware certificato.
+### Disclaimer
+The software and MQSC commands automatically generated by artificial intelligence are provided *"AS IS"*, without warranties of any kind. Before executing modification or restart commands on **Production IBM MQ** environments, always verify the operational impact with a certified middleware administrator.
 
-### Licenza del Codice e della Documentazione
+### Code and Documentation License
 Copyright © 2026 **Maurizio Delle Fratte**.  
-Questo progetto è distribuito sotto **Licenza MIT** (o secondo i termini del file `LICENSE` presente nella root del repository). È consentito l'uso, la copia, la modifica e la distribuzione del codice, purché venga mantenuta l'attribuzione all'autore originale.
+This project is distributed under the **MIT License** (or according to the terms of the `LICENSE` file in the root of the repository). Use, copying, modification, and distribution of the code are permitted, provided attribution to the original author is preserved.
