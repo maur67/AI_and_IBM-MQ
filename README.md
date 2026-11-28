@@ -1,4 +1,4 @@
-# 🤖 AI & Advanced IBM® MQ Log Diagnostics
+#  AI & Advanced IBM® MQ Log Diagnostics
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -10,7 +10,7 @@
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Project Overview](#-project-overview)
 - [Official Technology References](#-official-technology-references)
@@ -22,7 +22,7 @@
 
 ---
 
-## 📖 Project Overview
+##  Project Overview
 
 This repository provides a high-efficiency Python solution for automatic and proactive diagnosis of **IBM® MQ** error logs (`AMQERRxx.LOG`), executed entirely locally (*on-premise / air-gapped ready*) via file streaming.
 
@@ -30,7 +30,7 @@ To minimize memory footprint and maximize inference speed on middleware systems,
 
 ---
 
-## 🔗 Official Technology References
+##  Official Technology References
 
 Methodologies, error code parsing, and generated MQSC commands rely exclusively on the official documentation of their respective vendors:
 
@@ -43,7 +43,7 @@ Methodologies, error code parsing, and generated MQSC commands rely exclusively 
 
 ---
 
-## ⚙️ 1. Installing and Optimizing Ollama
+##  1. Installing and Optimizing Ollama
 
 The `qwen2.5-coder:0.5b` model maintains a very small memory footprint (~390 MB), while providing higher syntactic accuracy on MQSC commands compared to general-purpose models of similar size.
 
@@ -76,7 +76,7 @@ ollama run qwen2.5-coder:0.5b "Analyze error AMQ9209E"
 
 ---
 
-## 💻 2. System Requirements and Python Environment
+##  2. System Requirements and Python Environment
 
 ### Hardware Specifications (Resource Footprint)
 
@@ -105,7 +105,7 @@ python3 -c "import requests, urllib3, ollama, send2trash; print('Linux Setup: OK
 
 ---
 
-## 🧠 3. Analysis Script Architecture
+##  3. Analysis Script Architecture
 
 The pipeline processes the local `AMQERR01.LOG` file through 5 stages: **Streaming Ingestion**, **Regex Normalization**, **MD5 Hash Deduplication**, **Local SLM Inference**, and **Output Formatting**.
 
@@ -134,7 +134,7 @@ def compute_hash(text: str) -> str:
 def fetch_and_analyze_log_stream() -> list:
     """Streams the log file while filtering unique errors (E:) and warnings (W:)."""
     if not os.path.exists(LOCAL_LOG_FILENAME):
-        print(f"❌ Error: File '{LOCAL_LOG_FILENAME}' was not found in the current directory ({os.getcwd()})")
+        print(f" Error!: File '{LOCAL_LOG_FILENAME}' was not found in the current directory ({os.getcwd()})")
         return []
     
     seen_patterns = set()
@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
 ---
 
-## 🚀 4. Operational Guide and Output Example
+##  4. Operational Guide and Output Example
 
 Make sure `AMQERR01.LOG` is placed in the same directory as the script before running it:
 
@@ -233,7 +233,7 @@ python3 local_log_analyzer.py
 
 ---
 
-## ⚖️ 5. Intellectual Property, Trademarks & License
+##  5. Intellectual Property, Trademarks & License
 
 ### Intellectual Property and Trademarks (Trademark Notice)
 - **IBM®** and **IBM® MQ** are registered trademarks of **International Business Machines Corporation** in the United States and/or other countries. This project is an independent diagnostic support tool and is **not** affiliated with, sponsored by, or endorsed by IBM Corporation.
